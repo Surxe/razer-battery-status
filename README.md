@@ -19,7 +19,7 @@ The Razer app is Windows-only, so this reads the battery straight from the
 ./razer-battery --percent  # 74
 ./razer-battery --emoji    # 🔋 74%
 ./razer-battery --bar      # 🔋 ███████░░░ 74%
-./razer-battery --notify   # desktop notification popup: "Razer Mouse Battery / 74%"
+./razer-battery --notify   # KDE passive popup: "Razer Mouse Battery / 74%" (needs kdialog)
 ```
 
 ## Install (Debian 13, kernel 6.12)

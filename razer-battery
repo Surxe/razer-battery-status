@@ -64,21 +64,11 @@ def main():
     elif args.bar:
         print(f"{emoji_for(pct, charging)} {bar_for(pct)} {pct}%")
     elif args.notify:
-        import shutil
         import subprocess
-        title, body = "Razer Mouse Battery", f"{pct}%{charge_txt}"
-        # Numerical-only text popup that auto-hides after a few seconds.
-        # Prefer notify-send (libnotify); fall back to KDE's kdialog, which
-        # is present on Plasma without any extra package.
-        if shutil.which("notify-send"):
-            subprocess.run(["notify-send", "-a", "Razer", "-u", "normal",
-                            "-t", "4000", "-i", "battery", title, body])
-        elif shutil.which("kdialog"):
-            subprocess.run(["kdialog", "--title", title,
-                            "--passivepopup", body, "4"])
-        else:
-            print("No notifier found (install libnotify-bin or kdialog).",
-                  file=sys.stderr)
+        # Numerical-only passive popup via KDE's kdialog; auto-hides after
+        # the given number of seconds.
+        subprocess.run(["kdialog", "--title", "Razer Mouse Battery",
+                        "--passivepopup", f"{pct}%{charge_txt}", "4"])
         print(f"{name}: {pct}%{charge_txt}")
     else:
         print(f"{name}: {pct}%{charge_txt}")
