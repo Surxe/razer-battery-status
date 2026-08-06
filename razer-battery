@@ -65,10 +65,12 @@ def main():
         print(f"{emoji_for(pct, charging)} {bar_for(pct)} {pct}%")
     elif args.notify:
         import subprocess
+        # Numerical-only text popup; normal urgency + short timeout so the
+        # KDE notification system auto-hides it after a few seconds.
         subprocess.run([
-            "notify-send", "-a", "Razer",
-            "-h", f"int:value:{pct}",
-            f"{name}", f"Battery: {pct}%{charge_txt}",
+            "notify-send", "-a", "Razer", "-u", "normal", "-t", "4000",
+            "-i", "battery",
+            "Razer Mouse Battery", f"{pct}%{charge_txt}",
         ])
         print(f"{name}: {pct}%{charge_txt}")
     else:
