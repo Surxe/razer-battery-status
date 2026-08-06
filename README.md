@@ -1,52 +1,48 @@
 # razer-battery-status
 
-Read the battery level of a Razer wireless mouse on Linux without OpenRazer.
+A tiny, sudo-free battery readout for a Razer wireless mouse on Linux, using the
+[OpenRazer](https://openrazer.github.io/) daemon.
 
-The Razer app is Windows-only, and the Linux kernel doesn't expose the battery
-of the Naga V2 HyperSpeed anywhere (`/sys/class/power_supply`, `upower` — nothing).
-This script sends Razer's HID feature-report protocol straight to the wireless
-dongle and prints the battery percentage. Pure Python, **no dependencies**
-(`hidapi`/`pyusb` not required — it uses raw `ioctl`).
+The Razer app is Windows-only, so this reads the battery straight from the
+`openrazer-daemon` instead.
+
+## Requirements
+
+- `openrazer-meta` installed and its DKMS driver built (see *Install* below).
+- Your user in the `plugdev` group.
+- `openrazer-daemon` running in your session (systemd `--user` service).
 
 ## Usage
 
-The device node (`/dev/hidrawN`) is root-owned, so the query needs root:
+```sh
+./razer-battery            # Razer Naga V2 HyperSpeed: 74% (charging)
+./razer-battery --percent  # 74
+./razer-battery --emoji    # 🔋 74%
+./razer-battery --bar      # 🔋 ███████░░░ 74%
+./razer-battery --notify   # desktop notification popup, with a progress bar
+```
+
+## Install (Debian 13, kernel 6.12)
 
 ```sh
-sudo ./razer_battery.py
+sudo apt-get install openrazer-meta
+sudo gpasswd -a "$USER" plugdev      # if not already a member; then re-login
+systemctl --user enable --now openrazer-daemon.service
 ```
 
-Wake the mouse first (give it a wiggle) — a sleeping mouse won't answer.
-
-Example output:
-
-```
-Razer Naga V2 HyperSpeed battery: 74%   [raw 189/255, txid 0x1f, /dev/hidraw10]
-```
-
-## How it works
-
-It builds Razer's 90-byte report (command class `0x07`, command id `0x80` for
-battery level, `0x84` for charging status), sends it via `HIDIOCSFEATURE`, reads
-the reply via `HIDIOCGFEATURE`, and validates the checksum. Razer uses a
-per-model "transaction id" byte, so the script tries a list of known values and
-accepts the first reply with a valid CRC and a sane 0–100% reading.
-
-## Avoiding sudo (optional)
-
-Install a udev rule so your user can read the device without root:
+On kernel 6.12 the packaged 3.10.2 driver needs a one-line fix
+(`hid_report_raw_event` gained a `bufsize` argument):
 
 ```sh
-# /etc/udev/rules.d/99-razer-battery.rules
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="00b4", MODE="0660", GROUP="plugdev"
+sudo sed -i 's/hid_report_raw_event(hdev, HID_INPUT_REPORT, xdata, sizeof(xdata), 0);/hid_report_raw_event(hdev, HID_INPUT_REPORT, xdata, sizeof(xdata), sizeof(xdata), 0);/g' \
+  /usr/src/openrazer-driver-3.10.2/driver/razerkbd_driver.c
+sudo dpkg --configure -a             # rebuilds the DKMS module
 ```
 
-Then `sudo udevadm control --reload && sudo udevadm trigger`, ensure your user is
-in `plugdev`, and replug the dongle.
+Then replug the wireless dongle so the `razermouse` driver binds.
 
 ## Tested devices
 
 - Razer Naga V2 HyperSpeed (`1532:00b4`)
 
-Other Razer wireless mice likely work too — update the product id in the udev
-rule and the transaction-id list if needed.
+Any Razer device OpenRazer supports and that reports a battery will work.
