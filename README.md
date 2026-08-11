@@ -41,24 +41,12 @@ sudo dpkg --configure -a             # rebuilds the DKMS module
 
 Then replug the wireless dongle so the `razermouse` driver binds.
 
-## KDE shortcut (Meta+B)
+## Hotkey (optional)
 
-Bind the notification to a hotkey so you can check the battery any time:
-
-1. **System Settings → Keyboard → Shortcuts**.
-2. Click **`Add New ▾` → Command or Script…**.
-3. Paste the full command and press Enter:
-
-   ```
-   /srv/dev/repos/razer-battery-status/razer-battery --notify
-   ```
-
-4. Click the entry's **Add Shortcut** button and press **Meta+B**
-   (accept the reassignment, or pick another combo if it's taken).
-5. Click **Apply**.
-
-Now **Meta+B** pops up `Razer Mouse Battery / 74%`, which auto-hides after a few
-seconds. It works whenever `openrazer-daemon` is running in your session.
+`--notify` pops a passive KDE popup and exits, which makes it a good target for
+a global hotkey. Bind `razer-battery --notify` to any key via your desktop
+environment's keyboard-shortcut settings; it works whenever `openrazer-daemon`
+is running in your session.
 
 ## Tested devices
 
